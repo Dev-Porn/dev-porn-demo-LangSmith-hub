@@ -36,5 +36,5 @@
 
 ---
 
-![RAG Trace](/Users/wuhaosheng/dev/langsmith-hub/resource/rag-flow.png)
-![RAG Trace](/Users/wuhaosheng/dev/langsmith-hub/resource/evaluation.png)
+![RAG Trace](resource/rag-flow.png)
+![Evaluation Trace](resource/evaluation.png)
