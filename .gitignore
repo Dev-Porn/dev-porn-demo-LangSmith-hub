@@ -1,0 +1,56 @@
+# 忽略作業系統產生的檔案
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.DS_Store
+
+# 忽略編譯產生的檔案
+/bin/
+/obj/
+/node_modules/
+/dist/
+*.pyc
+*.class
+*.o
+*.exe
+
+# 忽略 IDE 或編輯器產生的檔案
+.idea/
+*.iml
+.vscode/
+*.suo
+*.user
+*.sln.docstates
+
+# 忽略套件管理工具產生的檔案
+/vendor/
+/bower_components/
+
+# 忽略個人設定檔
+*.sublime-project
+*.sublime-workspace
+
+# 忽略日誌檔和暫存檔
+*.log
+*.tmp
+*.temp
+*.swp
+*~
+
+# 忽略敏感資訊
+*.pem
+*.cer
+*.key
+*.env
+
+# 其他
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+
+data

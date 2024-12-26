@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "langsmith-hub"
+version = "0.1.0"
+description = "demo langsmith hub"
+authors = ["Jeffrey Wu <wu19930628@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+langchain-openai = "^0.2.14"
+langchain-core = "^0.3.28"
+langchain-community = "^0.3.13"
+langchain = "^0.3.13"
+chromadb = "^0.5.23"
+pypdf = "^5.1.0"
+python-dotenv = "^1.0.1"
+black = "^24.10.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
