@@ -1,13 +1,14 @@
 from typing import Annotated
 
 from langchain_openai import ChatOpenAI
-
+from langchain.schema import AIMessage, HumanMessage
 
 from typing_extensions import TypedDict
 
 from langgraph.graph import StateGraph
 from langgraph.prebuilt import ToolNode, tools_condition
 from langgraph.graph.message import add_messages
+from langgraph.checkpoint.memory import MemorySaver
 
 import streamlit as st
 from PIL import Image
@@ -29,14 +30,12 @@ class State(TypedDict):
     messages: Annotated[list, add_messages]
 
 
+memory = MemorySaver()
 graph_builder = StateGraph(State)
 
 search_tool = TavilySearchResults(
     max_results=2,
-    search_depth="advanced",
     include_answer=True,
-    include_raw_content=False,
-    include_images=False,
     tavily_api_key=os.getenv("TAVILY_API_KEY"),
 )
 
@@ -63,27 +62,26 @@ graph_builder.add_conditional_edges("chatbot", tools_condition)
 graph_builder.add_edge("tools", "chatbot")
 
 graph_builder.set_entry_point("chatbot")
-graph_builder.set_finish_point("chatbot")
 
 graph = graph_builder.compile()
 
 
 graph_png = graph.get_graph().draw_mermaid_png()
 image = Image.open(io.BytesIO(graph_png))
-
-st.image(image)
-
-
-def stream_graph_updates(user_input: str):
-    for event in graph.stream({"messages": [("user", user_input)]}):
-        for value in event.values():
-            st.write(value["messages"][-1].content)
+with st.sidebar:
+    st.markdown("**work flow**")
+    st.image(image)
 
 
 user_input = st.text_input("輸入訊息:")
 
 if st.button("送出"):
     if user_input:
-        stream_graph_updates(user_input)
+        init_state = {"messages": [("user", user_input)]}
+        for event in graph.stream(init_state, stream_mode="values"):
+            last_message = event["messages"][-1]
+        with st.expander("AI摘要", expanded=True):
+            if isinstance(last_message, AIMessage):
+                st.write(last_message.content)
     else:
         st.error("請輸入訊息")
