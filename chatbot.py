@@ -2,7 +2,7 @@ from typing import Annotated
 
 from langchain_openai import ChatOpenAI
 from langchain.schema import AIMessage, HumanMessage
-
+from langchain.tools import StructuredTool
 from typing_extensions import TypedDict
 
 from langgraph.graph import StateGraph
@@ -33,12 +33,21 @@ class State(TypedDict):
 memory = MemorySaver()
 graph_builder = StateGraph(State)
 
-search_tool = TavilySearchResults(
-    max_results=2,
-    include_answer=True,
-    tavily_api_key=os.getenv("TAVILY_API_KEY"),
-)
 
+def search_func(query: str):
+    search_tool = TavilySearchResults(
+        max_results=2,
+        include_answer=True,
+        tavily_api_key=os.getenv("TAVILY_API_KEY"),
+    )
+    return search_tool.run(query)
+
+
+search_tool = StructuredTool.from_function(
+    func=search_func,
+    name="search_external_info",
+    description="用於搜尋網路資訊。當你無法從你的知識庫中找到答案時，可以使用此工具",
+)
 
 tools = [search_tool]
 
@@ -80,6 +89,7 @@ if st.button("送出"):
         init_state = {"messages": [("user", user_input)]}
         for event in graph.stream(init_state, stream_mode="values"):
             last_message = event["messages"][-1]
+            st.write(event["messages"][-1])
         with st.expander("AI摘要", expanded=True):
             if isinstance(last_message, AIMessage):
                 st.write(last_message.content)
