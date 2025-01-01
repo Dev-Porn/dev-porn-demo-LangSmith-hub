@@ -13,6 +13,7 @@ def main():
     )
 
     question = "比特幣為了解決什麼問題?"
+    # question = "比特幣2024重大事件"
     inputs = {
         "question": question,
         "documents": [],
@@ -23,10 +24,14 @@ def main():
 
     last_state = None
     for state in app.stream(inputs):
-        # print("Current node state:", state)
         last_state = state
 
-    generated_answer = last_state["generate"]["generation"].content
+    if "generate" in last_state:
+        generated_answer = last_state["generate"]["generation"].content
+    elif "summarize_web_result" in last_state:
+        generated_answer = last_state["summarize_web_result"]["generation"].content
+    else:
+        raise KeyError("No valid generation result found in the workflow state.")
     print("=== Generated Answer ===")
     print(generated_answer)
 

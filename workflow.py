@@ -48,10 +48,18 @@ def web_search(state: GraphState):
     return {"documents": documents}
 
 
+def summarize_web_result(state: GraphState):
+    llm = state["llm"]
+    question = state["question"]
+    documents = state["documents"]
+    generation = llm.summarize_web_result(documents, question)
+    return {"generation": generation}
+
+
 def decide_to_generate(state: GraphState):
     web_search = state["web_search"]
     if web_search == "Yes":
-        return "transform_query"
+        return "web_search_node"
     else:
         return "generate"
 
@@ -61,6 +69,7 @@ workflow = StateGraph(GraphState)
 workflow.add_node("retrieve", retrieve)
 workflow.add_node("grade_documents", grade_documents)
 workflow.add_node("generate", generate)
+workflow.add_node("summarize_web_result", summarize_web_result)
 workflow.add_node("transform_query", transform_query)
 workflow.add_node("web_search_node", web_search)
 
@@ -72,10 +81,11 @@ workflow.add_conditional_edges(
     {
         "transform_query": "transform_query",
         "generate": "generate",
+        "web_search_node": "web_search_node",
     },
 )
 workflow.add_edge("transform_query", "web_search_node")
-workflow.add_edge("web_search_node", "generate")
+workflow.add_edge("web_search_node", "summarize_web_result")
 workflow.add_edge("generate", END)
-
+workflow.add_edge("summarize_web_result", END)
 app = workflow.compile()

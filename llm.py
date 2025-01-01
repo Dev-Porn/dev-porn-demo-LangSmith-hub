@@ -9,10 +9,10 @@ from langchain_core.runnables import RunnableParallel
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import Chroma
 from langchain_community.tools.tavily_search import TavilySearchResults
-
+from langchain.prompts import PromptTemplate
 from langsmith import traceable
 
-from utils.utils import format_documents
+from utils.utils import format_documents, format_web_search
 
 
 class Llm:
@@ -31,6 +31,20 @@ class Llm:
         self.vector_store = Chroma.from_documents(self.pdf_documents, embeddings)
 
         self.chat_model = ChatOpenAI(model_name="gpt-3.5-turbo-1106", temperature=0)
+        self.summarize_prompt_template = PromptTemplate(
+            input_variables=["context", "question"],
+            template="""
+            You are an expert summarizer. Based on the following documents, provide a concise summary that answers the question.
+
+            Documents:
+            {context}
+
+            Question:
+            {question}
+
+            Summary:
+            """,
+        )
 
         self.rag_prompt_template = hub.pull(rag_prompt_id)
         self.evaluate_documents_prompt_template = hub.pull(evaluate_docs_prompt_id)
@@ -56,6 +70,16 @@ class Llm:
         )
 
         result = rag_workflow.invoke({"context": format_context, "question": question})
+        return result
+
+    @traceable
+    def summarize_web_result(self, documents: list, question: str):
+        format_context = format_web_search(documents)
+        summarize_prompt = self.summarize_prompt_template.format(
+            context=format_context, question=question
+        )
+        result = self.chat_model.invoke(summarize_prompt)
+        print(result)
         return result
 
     @traceable
