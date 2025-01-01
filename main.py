@@ -1,24 +1,45 @@
 import os
-from dotenv import load_dotenv
 from llm import Llm
+from workflow import app
 
 
-llm = Llm(
-    data_path=os.getenv("DATA_PATH"),
-    rag_prompt_id="daethyra/rag-prompt",
-    evaluate_prompt_id="jisujiji/rag-prompt",
-)
+def main():
+    llm = Llm(
+        data_path=os.getenv("DATA_PATH"),
+        rag_prompt_id="daethyra/rag-prompt",
+        evaluate_prompt_id="jisujiji/rag-prompt",
+        evaluate_docs_prompt_id="teddynote/retrieval-question-grader",
+        rewrite_question_prompt_id="efriis/self-rag-question-rewriter",
+    )
 
-question = "比特幣為了解決什麼問題?"
+    question = "比特幣為了解決什麼問題?"
+    inputs = {
+        "question": question,
+        "documents": [],
+        "generation": "",
+        "web_search": "",
+        "llm": llm,
+    }
 
-generated_answer = llm.rag_chain(question)
+    last_state = None
+    for state in app.stream(inputs):
+        # print("Current node state:", state)
+        last_state = state
 
-evaluation_score = llm.evaluate(
-    question=question,
-    answer=generated_answer,
-    topic="比特幣",
-    criteria="相關性和準確性",
-    examples="比特幣是一種去中心化的電子現金系統",
-).content
+    generated_answer = last_state["generate"]["generation"].content
+    print("=== Generated Answer ===")
+    print(generated_answer)
 
-print(evaluation_score)
+    evaluation_score = llm.evaluate_answer(
+        question=question,
+        answer=generated_answer,
+        topic="比特幣",
+        criteria="相關性和準確性",
+        examples="比特幣是一種去中心化的電子現金系統",
+    ).content
+    print("\n=== Evaluation Result ===")
+    print(evaluation_score)
+
+
+if __name__ == "__main__":
+    main()
