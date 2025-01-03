@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from langchain_openai import ChatOpenAI
-from langchain.schema import AIMessage, HumanMessage
+from langchain.schema import AIMessage
 from langchain.tools import StructuredTool
 from typing_extensions import TypedDict
 

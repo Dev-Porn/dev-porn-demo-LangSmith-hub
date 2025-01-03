@@ -2,6 +2,8 @@ from langgraph.graph import START, END, StateGraph
 from llm import Llm
 from typing import List, TypedDict
 
+from utils.utils import save_grpah_as_image
+
 
 class GraphState(TypedDict):
     """
@@ -163,3 +165,5 @@ workflow.add_edge("web_search_node", "summarize_web_result")
 workflow.add_edge("generate", END)
 workflow.add_edge("summarize_web_result", END)
 app = workflow.compile()
+
+# save_grpah_as_image(app, "data/graph.png")
