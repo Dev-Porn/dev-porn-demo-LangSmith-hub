@@ -1,5 +1,4 @@
 import os
-from dotenv import load_dotenv
 
 from langchain import hub
 from langchain_openai import ChatOpenAI
@@ -16,6 +15,17 @@ from utils.utils import format_documents, format_web_search
 
 
 class Llm:
+    """
+    提供與大型語言模型 (LLM) 互動的功能，用於文件檢索、摘要、評估和問題重寫任務。
+
+    屬性:
+        data_path (str): PDF 資料的路徑。
+        rag_prompt_id (str): 用於 RAG 提示模板 ID。
+        evaluate_prompt_id (str): 用於答案評估提示模板 ID。
+        evaluate_docs_prompt_id (str): 用於文件評估提示模板 ID。
+        rewrite_question_prompt_id (str): 用於問題重寫提示模板 ID。
+    """
+
     def __init__(
         self,
         data_path: str,
@@ -53,12 +63,30 @@ class Llm:
 
     @traceable
     def retriever(self, query: str):
+        """
+        根據查詢字串檢索相關文件。
+
+        參數:
+            query (str): 查詢字串。
+
+        回傳:
+            list: 與查詢相關的文件列表。
+        """
         retriever = self.vector_store.as_retriever()
         relevant_docs = retriever.get_relevant_documents(query)
         return relevant_docs
 
     @traceable
     def rag_chain(self, question: str):
+        """
+        執行 RAG (檢索增強生成) 流程，回答指定問題。
+
+        參數:
+            question (str): 使用者的提問。
+
+        回傳:
+            str: RAG 生成的答案。
+        """
         docs = self.retriever(question)
         format_context = format_documents(docs)
         rag_workflow = (
@@ -74,6 +102,16 @@ class Llm:
 
     @traceable
     def summarize_web_result(self, documents: list, question: str):
+        """
+        根據網路搜尋的結果生成摘要。
+
+        參數:
+            documents (list): 文件列表。
+            question (str): 使用者的提問。
+
+        回傳:
+            str: 根據文件內容和提問生成的摘要。
+        """
         format_context = format_web_search(documents)
         summarize_prompt = self.summarize_prompt_template.format(
             context=format_context, question=question
@@ -86,6 +124,19 @@ class Llm:
     def evaluate_answer(
         self, question: str, answer: str, topic: str, criteria: str, examples: str
     ):
+        """
+        評估答案的質量。
+
+        參數:
+            question (str): 問題。
+            answer (str): 答案。
+            topic (str): 主題。
+            criteria (str): 評估標準。
+            examples (str): 參考範例。
+
+        回傳:
+            dict: 評估結果。
+        """
         input_data = {
             "modelInput": question,
             "modelOutput": answer,
@@ -99,6 +150,16 @@ class Llm:
 
     @traceable
     def evaluate_documents(self, question: str, documents: list):
+        """
+        評估文件與問題的相關性，並決定是否需要進行網路搜尋。
+
+        參數:
+            question (str): 問題。
+            documents (list): 文件列表。
+
+        回傳:
+            tuple: (相關文件列表, 是否需要網路搜尋)。
+        """
         filtered_docs = []
         web_search = "No"
         for doc in documents:
@@ -119,6 +180,15 @@ class Llm:
 
     @traceable
     def rewrite_question(self, question: str):
+        """
+        重寫問題以提高檢索準確性。
+
+        參數:
+            question (str): 原始問題。
+
+        回傳:
+            str: 重寫後的問題。
+        """
         input_data = {"question": question}
         rewrite_workflow = self.rewrite_question_prompt_template | self.chat_model
         rewrite_result = rewrite_workflow.invoke(input_data)
@@ -126,6 +196,15 @@ class Llm:
 
     @traceable
     def web_search(self, question: str):
+        """
+        使用網路搜尋工具查詢答案。
+
+        參數:
+            question (str): 查詢問題。
+
+        回傳:
+            dict: 網路搜尋結果。
+        """
         web_search_tool = TavilySearchResults(
             max_results=2,
             include_answer=True,

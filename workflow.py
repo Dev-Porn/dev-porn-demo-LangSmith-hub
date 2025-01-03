@@ -4,6 +4,17 @@ from typing import List, TypedDict
 
 
 class GraphState(TypedDict):
+    """
+    定義狀態圖中的節點狀態。
+
+    屬性:
+        question (str): 問題字串。
+        documents (List[str]): 文件內容的列表。
+        generation (str): LLM 生成的結果。
+        web_search (str): 是否需要進行網路搜尋 ("Yes" 或 "No")。
+        llm (Llm): 用於處理 LLM 的實例。
+    """
+
     question: str
     documents: List[str]
     generation: str
@@ -12,6 +23,15 @@ class GraphState(TypedDict):
 
 
 def retrieve(state: GraphState):
+    """
+    根據問題從向量存儲中檢索相關文件。
+
+    參數:
+        state (GraphState): 當前節點的狀態。
+
+    回傳:
+        dict: 包含檢索到的文件的字典。
+    """
     question = state["question"]
     llm = state["llm"]
     documents = llm.retriever(question)
@@ -19,6 +39,15 @@ def retrieve(state: GraphState):
 
 
 def grade_documents(state: GraphState):
+    """
+    根據問題評估文件的相關性，並決定是否需要網路搜尋。
+
+    參數:
+        state (GraphState): 當前節點的狀態。
+
+    回傳:
+        dict: 包含篩選後的文件列表和網路搜尋標記的字典。
+    """
     llm = state["llm"]
     question = state["question"]
     documents = state["documents"]
@@ -27,6 +56,15 @@ def grade_documents(state: GraphState):
 
 
 def generate(state: GraphState):
+    """
+    使用 RAG 流程生成答案。
+
+    參數:
+        state (GraphState): 當前節點的狀態。
+
+    回傳:
+        dict: 包含生成結果的字典。
+    """
     question = state["question"]
     llm = state["llm"]
     result = llm.rag_chain(question)
@@ -34,6 +72,15 @@ def generate(state: GraphState):
 
 
 def transform_query(state: GraphState):
+    """
+    改寫問題以提高檢索和生成的準確性。
+
+    參數:
+        state (GraphState): 當前節點的狀態。
+
+    回傳:
+        dict: 包含改寫後問題的字典。
+    """
     llm = state["llm"]
     question = state["question"]
     better_question = llm.rewrite_question(question)
@@ -41,6 +88,15 @@ def transform_query(state: GraphState):
 
 
 def web_search(state: GraphState):
+    """
+    使用網路搜尋工具查詢問題，並將結果添加到現有文件列表中。
+
+    參數:
+        state (GraphState): 當前節點的狀態。
+
+    回傳:
+        dict: 包含更新後文件列表的字典。
+    """
     llm = state["llm"]
     question = state["question"]
     web_result = llm.web_search(question)
@@ -49,6 +105,15 @@ def web_search(state: GraphState):
 
 
 def summarize_web_result(state: GraphState):
+    """
+    根據網路搜尋結果生成摘要。
+
+    參數:
+        state (GraphState): 當前節點的狀態。
+
+    回傳:
+        dict: 包含摘要結果的字典。
+    """
     llm = state["llm"]
     question = state["question"]
     documents = state["documents"]
@@ -57,6 +122,15 @@ def summarize_web_result(state: GraphState):
 
 
 def decide_to_generate(state: GraphState):
+    """
+    根據文件評估結果決定下一步操作。
+
+    參數:
+        state (GraphState): 當前節點的狀態。
+
+    回傳:
+        str: 下一步操作的節點名稱。
+    """
     web_search = state["web_search"]
     if web_search == "Yes":
         return "web_search_node"

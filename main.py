@@ -31,7 +31,7 @@ def main():
     elif "summarize_web_result" in last_state:
         generated_answer = last_state["summarize_web_result"]["generation"].content
     else:
-        raise KeyError("No valid generation result found in the workflow state.")
+        raise KeyError("State內無有效的生成結果")
     print("=== Generated Answer ===")
     print(generated_answer)
 
